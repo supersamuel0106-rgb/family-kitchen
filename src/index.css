@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --font-headline: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-body: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-label: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary: #974125;
+  --color-primary-container: #f78b69;
+  --color-primary-dim: #88361b;
+  --color-on-primary: #ffefeb;
+  
+  --color-secondary: #47624c;
+  --color-secondary-container: #cceacf;
+  --color-on-secondary: #dcfbdf;
+  
+  --color-tertiary: #6e5a00;
+  --color-tertiary-container: #fcdb65;
+  --color-on-tertiary: #fff2d0;
+  
+  --color-background: #fbf5f2;
+  --color-surface: #fbf5f2;
+  --color-on-surface: #302e2d;
+  --color-on-surface-variant: #5e5b59;
+  
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f5f0ec;
+  --color-surface-container: #ede7e4;
+  --color-surface-container-high: #e7e1de;
+  --color-surface-container-highest: #e2dcd8;
+  
+  --color-error: #b02500;
+  --color-error-container: #f95630;
+  --color-on-error: #ffefec;
+  
+  --color-outline: #7a7674;
+  --color-outline-variant: #b1acaa;
+}
+
+@layer base {
+  body {
+    @apply bg-background text-on-surface font-body;
+  }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

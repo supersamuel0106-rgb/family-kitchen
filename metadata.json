@@ -1,0 +1,5 @@
+{
+  "name": "Family Kitchen Reservation",
+  "description": "A mobile-first app for family members to share and manage kitchen usage, avoiding scheduling conflicts.",
+  "requestFramePermissions": ["camera"]
+}
