@@ -4,6 +4,7 @@ import { kitchenService } from '../services/kitchenService';
 
 interface AppContextType {
   currentRole: FamilyRole | null;
+  setCurrentRole: (role: FamilyRole) => void;  // NOTE: 直接設定角色物件，避免 ID 查找失敗
   setCurrentRoleById: (id: FamilyRoleId) => void;
   currentPage: Page;
   setCurrentPage: (page: Page) => void;
@@ -110,6 +111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <AppContext.Provider value={{
       currentRole,
+      setCurrentRole,
       setCurrentRoleById,
       currentPage,
       setCurrentPage,

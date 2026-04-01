@@ -1,12 +1,14 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { FAMILY_ROLES } from '../data/mockData';
+import { FamilyRole } from '../types';
 import { UserCircle, Heart, Utensils, PartyPopper } from 'lucide-react';
 
 export const RoleSelectionPage: React.FC = () => {
-  const { setCurrentRoleById, setCurrentPage, roles, isLoading } = useApp();
+  const { setCurrentRole, setCurrentPage, roles, isLoading } = useApp();
 
-  // NOTE: 優先使用 Supabase 讀取的角色資料；若尚未載入則顯示讀取中
-  const displayRoles = roles;
+  // NOTE: 優先使用 Supabase 角色；若尚未載入或為空則使用 mockData 作為 fallback
+  const displayRoles: FamilyRole[] = roles.length > 0 ? roles : FAMILY_ROLES;
 
   const getIcon = (iconName: string, color: string) => {
     const props = { size: 40, style: { color } };
@@ -32,14 +34,15 @@ export const RoleSelectionPage: React.FC = () => {
         </header>
 
         <main className="grid grid-cols-2 gap-4 w-full">
-          {isLoading && (
+          {isLoading && displayRoles.length === 0 && (
             <p className="col-span-2 text-center text-on-surface-variant">讀取角色資料中...</p>
           )}
-          {!isLoading && displayRoles.map((role) => (
+          {displayRoles.map((role) => (
             <button
               key={role.id}
               onClick={() => {
-                setCurrentRoleById(role.id);
+                // NOTE: 直接設定完整 role 物件，避免 ID 不一致造成的查找失敗
+                setCurrentRole(role);
                 setCurrentPage('main');
               }}
               className="group bg-surface-container-lowest hover:bg-white transition-all duration-200 rounded-2xl p-6 flex flex-col items-center text-center shadow-sm border border-surface-container-high hover:border-primary/20 active:scale-[0.98]"
