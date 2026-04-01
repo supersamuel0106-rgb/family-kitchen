@@ -1,10 +1,12 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { FAMILY_ROLES } from '../data/mockData';
 import { UserCircle, Heart, Utensils, PartyPopper } from 'lucide-react';
 
 export const RoleSelectionPage: React.FC = () => {
-  const { setCurrentRoleById, setCurrentPage } = useApp();
+  const { setCurrentRoleById, setCurrentPage, roles, isLoading } = useApp();
+
+  // NOTE: 優先使用 Supabase 讀取的角色資料；若尚未載入則顯示讀取中
+  const displayRoles = roles;
 
   const getIcon = (iconName: string, color: string) => {
     const props = { size: 40, style: { color } };
@@ -30,7 +32,10 @@ export const RoleSelectionPage: React.FC = () => {
         </header>
 
         <main className="grid grid-cols-2 gap-4 w-full">
-          {FAMILY_ROLES.map((role) => (
+          {isLoading && (
+            <p className="col-span-2 text-center text-on-surface-variant">讀取角色資料中...</p>
+          )}
+          {!isLoading && displayRoles.map((role) => (
             <button
               key={role.id}
               onClick={() => {
