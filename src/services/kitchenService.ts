@@ -22,10 +22,12 @@ const toCamelCase = (obj: any): any => {
 };
 
 async function safeJson(res: Response) {
+  const text = await res.text();
   try {
-    return await res.json();
+    return JSON.parse(text);
   } catch (err) {
-    throw new Error('無法解讀伺服器回應 (非 JSON 格式)');
+    console.error('JSON Parse Error:', err, 'Raw Text:', text);
+    throw new Error(`無法解讀伺服器回應 (非 JSON 格式)。預覽：${text.substring(0, 100)}...`);
   }
 }
 
