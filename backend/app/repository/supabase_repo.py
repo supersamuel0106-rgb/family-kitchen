@@ -5,18 +5,19 @@ from typing import List, Dict, Any
 
 class SupabaseRepository:
     def __init__(self):
-        url: str = os.getenv("SUPABASE_URL", "")
-        key: str = os.getenv("SUPABASE_KEY", "")
+        # 自動清理環境變數：移除前後空格及引號
+        url: str = (os.getenv("SUPABASE_URL") or "").strip().strip('"').strip("'")
+        key: str = (os.getenv("SUPABASE_KEY") or "").strip().strip('"').strip("'")
         self._init_error = None
         
         if not url or not key:
-            self._init_error = "SUPABASE_URL 或 SUPABASE_KEY 環境變數未設定，請檢查 Vercel 設定。"
+            self._init_error = f"SUPABASE_URL ({'SET' if url else 'MISSING'}) 或 SUPABASE_KEY ({'SET' if key else 'MISSING'}) 環境變數格式不正確。"
             self.client = None
         else:
             try:
                 self.client: Client = create_client(url, key)
             except Exception as e:
-                self._init_error = f"無法初始化 Supabase 客戶端: {str(e)}"
+                self._init_error = f"Supabase 初始化失敗: {str(e)}"
                 self.client = None
 
     def _check_client(self):

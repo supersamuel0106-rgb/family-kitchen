@@ -43,13 +43,19 @@ def create_app():
             # 資料庫測試
             db_status = "N/A"
             db_error = None
+            db_init_err = None
             try:
                 from app.repository.supabase_repo import repo
-                # 嘗試讀取 roles 表，這不應該回傳過多資料
-                test_res = repo.client.table("roles").select("id").limit(1).execute()
-                db_status = "CONNECTED"
+                db_init_err = repo._init_error # 讀取初始化期間的錯誤
+                
+                if repo.client:
+                    # 嘗試讀取 roles 表，這不應該回傳過多資料
+                    test_res = repo.client.table("roles").select("id").limit(1).execute()
+                    db_status = "CONNECTED"
+                else:
+                    db_status = "INIT_FAILED"
             except Exception as e:
-                db_status = "FAILED"
+                db_status = "QUERY_FAILED"
                 db_error = str(e)
 
             return {
@@ -62,7 +68,8 @@ def create_app():
                 "env_supabase_url": "SET" if os.getenv("SUPABASE_URL") else "MISSING",
                 "env_supabase_key": "SET" if os.getenv("SUPABASE_KEY") else "MISSING",
                 "db_test_status": db_status,
-                "db_test_error": db_error
+                "db_test_error": db_error,
+                "db_init_error": db_init_err
             }
 
         # 主路由
