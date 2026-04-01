@@ -55,9 +55,20 @@ def create_app():
                 project_url_masked = repo.get_masked_url()
                 
                 if repo.client:
-                    # 1. 資料庫連線測試
+                    # 1. 資料庫連線與權限測試
                     test_res = repo.client.table("roles").select("id").limit(1).execute()
                     db_status = "CONNECTED"
+                    
+                    # 嘗試模擬寫入一個測試 Session (隨後會試圖刪除或僅作測試)
+                    # 這裡我們只測試是否能進入 INSERT 流程，不一定要真的寫入成功（如果有 RLS 擋住會報錯）
+                    db_write_status = "N/A"
+                    try:
+                        # 測試讀取 usage_sessions (要有 SELECT 權限)
+                        repo.client.table("usage_sessions").select("id").limit(1).execute()
+                        db_write_status = "SELECT_OK"
+                    except Exception as we:
+                        db_write_status = "SELECT_FAILED"
+                        db_error = f"查詢失敗: {str(we)}"
                     
                     # 2. Storage 深度測試
                     try:
@@ -95,6 +106,7 @@ def create_app():
                 "db_test_status": db_status,
                 "db_test_error": db_error,
                 "db_init_error": db_init_err,
+                "db_session_test": db_write_status,
                 "storage_test_status": storage_status,
                 "storage_test_error": storage_error,
                 "buckets_seen": buckets_seen

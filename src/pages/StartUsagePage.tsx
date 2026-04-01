@@ -6,8 +6,13 @@ export const StartUsagePage: React.FC = () => {
   const { setCurrentPage, startSession } = useApp();
 
   const handleStart = async () => {
-    await startSession();
-    setCurrentPage('timer');
+    try {
+      await startSession();
+      setCurrentPage('timer');
+    } catch (err: any) {
+      console.error(err);
+      alert(`開始計時失敗: ${err.message || '請檢查 Supabase usage_sessions 資料表權限'}`);
+    }
   };
 
   return (
