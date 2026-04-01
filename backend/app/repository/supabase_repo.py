@@ -81,30 +81,42 @@ class SupabaseRepository:
 
     def upload_photo(self, file_bytes: bytes, file_name: str, content_type: str) -> str:
         self._check_client()
-        # Ensure unique file name
-        unique_name = f"{uuid.uuid4()}_{file_name}"
-        path = f"photos/{unique_name}"
-        
-        # We need to pass file bytes as content
-        self.client.storage.from_("kitchen_photos").upload(
-            path,
-            file_bytes,
-            file_options={"content-type": content_type}
-        )
-        return self.client.storage.from_("kitchen_photos").get_public_url(path)
+        try:
+            # 確保檔案名稱唯一
+            unique_name = f"{uuid.uuid4()}_{file_name}"
+            path = f"photos/{unique_name}"
+            
+            # 上傳檔案到 kitchen_photos 存儲桶
+            res = self.client.storage.from_("kitchen_photos").upload(
+                path,
+                file_bytes,
+                file_options={"content-type": content_type}
+            )
+            
+            # 獲取公開 URL
+            return self.client.storage.from_("kitchen_photos").get_public_url(path)
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=f"圖片上傳 Storage 失敗: {str(e)}")
 
     def create_post(self, session_id: str, role_id: str, photo_url: str, caption: str, published_at: str, duration: int) -> Dict[str, Any]:
         self._check_client()
-        data = {
-            "usage_session_id": session_id,
-            "role_id": role_id,
-            "photo_url": photo_url,
-            "caption": caption,
-            "published_at": published_at,
-            "duration_seconds": duration
-        }
-        response = self.client.table("usage_posts").insert(data).execute()
-        return response.data[0] if response.data else None
+        try:
+            data = {
+                "usage_session_id": session_id,
+                "role_id": role_id,
+                "photo_url": photo_url,
+                "caption": caption,
+                "published_at": published_at,
+                "duration_seconds": duration
+            }
+            response = self.client.table("usage_posts").insert(data).execute()
+            if not response.data:
+                raise Exception("資料庫插入成功但未回傳數據")
+            return response.data[0]
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=f"建立動態貼文失敗: {str(e)}")
 
     def get_posts(self) -> List[Dict[str, Any]]:
         self._check_client()

@@ -44,14 +44,26 @@ def create_app():
             db_status = "N/A"
             db_error = None
             db_init_err = None
+            storage_status = "N/A"
+            storage_error = None
+            
             try:
                 from app.repository.supabase_repo import repo
-                db_init_err = repo._init_error # 讀取初始化期間的錯誤
+                db_init_err = repo._init_error
                 
                 if repo.client:
-                    # 嘗試讀取 roles 表，這不應該回傳過多資料
+                    # 1. 資料庫連線測試
                     test_res = repo.client.table("roles").select("id").limit(1).execute()
                     db_status = "CONNECTED"
+                    
+                    # 2. Storage 存儲桶測試
+                    try:
+                        # 嘗試列出 bucket 中的檔案（即使用戶沒有檔案也應該能成功呼叫）
+                        storage_res = repo.client.storage.get_bucket("kitchen_photos")
+                        storage_status = "FOUND"
+                    except Exception as se:
+                        storage_status = "NOT_FOUND_OR_ERROR"
+                        storage_error = str(se)
                 else:
                     db_status = "INIT_FAILED"
             except Exception as e:
@@ -69,7 +81,9 @@ def create_app():
                 "env_supabase_key": "SET" if os.getenv("SUPABASE_KEY") else "MISSING",
                 "db_test_status": db_status,
                 "db_test_error": db_error,
-                "db_init_error": db_init_err
+                "db_init_error": db_init_err,
+                "storage_test_status": storage_status,
+                "storage_test_error": storage_error
             }
 
         # 主路由
