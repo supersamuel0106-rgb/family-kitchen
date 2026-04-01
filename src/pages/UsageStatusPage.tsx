@@ -4,7 +4,7 @@ import { TopBar } from '../components/TopBar';
 import { Clock, User, Home, LayoutGrid, PlayCircle, MessageSquareOff } from 'lucide-react';
 
 export const UsageStatusPage: React.FC = () => {
-  const { posts, roles, setCurrentPage } = useApp();
+  const { posts, roles, setCurrentPage, isLoading, error, refreshData } = useApp();
 
   const formatTime = (isoString: string) => {
     const date = new Date(isoString);
@@ -30,7 +30,23 @@ export const UsageStatusPage: React.FC = () => {
         </header>
 
         <div className="flex flex-col gap-6">
-          {posts.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+               <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+               <p className="text-on-surface-variant text-sm font-medium">資料讀取中...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-20 text-error gap-4 px-8 text-center">
+              <MessageSquareOff size={48} strokeWidth={1.5} />
+              <p className="font-bold">連線失敗: {error}</p>
+              <button 
+                onClick={refreshData}
+                className="mt-2 bg-primary text-on-primary px-6 py-2 rounded-full text-sm font-bold shadow-md active:scale-95 transition-all"
+              >
+                重新整理
+              </button>
+            </div>
+          ) : posts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant/40 gap-4">
               <MessageSquareOff size={48} strokeWidth={1.5} />
               <p className="font-bold">目前尚無廚房使用紀錄</p>

@@ -19,6 +19,8 @@ interface AppContextType {
   setTempPhoto: (url: string | null) => void;
   lastDuration: number;
   roles: FamilyRole[];
+  isLoading: boolean;
+  error: string | null;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -32,16 +34,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [roles, setRoles] = useState<FamilyRole[]>([]);
   const [tempPhoto, setTempPhoto] = useState<string | null>(null);
   const [lastDuration, setLastDuration] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const refreshData = async () => {
-    const [resData, postData, roleData] = await Promise.all([
-      kitchenService.getReservations(),
-      kitchenService.getUsagePosts(),
-      kitchenService.getFamilyRoles()
-    ]);
-    setReservations(resData);
-    setPosts(postData);
-    setRoles(roleData);
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [resData, postData, roleData] = await Promise.all([
+        kitchenService.getReservations(),
+        kitchenService.getUsagePosts(),
+        kitchenService.getFamilyRoles()
+      ]);
+      setReservations(resData);
+      setPosts(postData);
+      setRoles(roleData);
+    } catch (err: any) {
+      setError(err.message || '資料讀取失敗');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -97,7 +109,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tempPhoto,
       setTempPhoto,
       lastDuration,
-      roles
+      roles,
+      isLoading,
+      error
     }}>
       {children}
     </AppContext.Provider>

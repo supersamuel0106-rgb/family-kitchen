@@ -7,20 +7,31 @@ class SupabaseRepository:
     def __init__(self):
         url: str = os.getenv("SUPABASE_URL", "")
         key: str = os.getenv("SUPABASE_KEY", "")
+        self._init_error = None
+        
         if not url or not key:
-            print("Warning: Supabase URL and Key are not set yet.")
+            self._init_error = "SUPABASE_URL 或 SUPABASE_KEY 環境變數未設定，請檢查 Vercel 設定。"
             self.client = None
         else:
-            self.client: Client = create_client(url, key)
+            try:
+                self.client: Client = create_client(url, key)
+            except Exception as e:
+                self._init_error = f"無法初始化 Supabase 客戶端: {str(e)}"
+                self.client = None
 
     def _check_client(self):
         if not self.client:
-            raise Exception("Supabase client is not initialized.")
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=self._init_error or "Supabase 客戶端未初始化")
 
     def get_roles(self) -> List[Dict[str, Any]]:
         self._check_client()
-        response = self.client.table("roles").select("*").order("display_order").execute()
-        return response.data
+        try:
+            response = self.client.table("roles").select("*").order("display_order").execute()
+            return response.data
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=f"讀取角色資料失敗: {str(e)}")
 
     def get_reservations(self) -> List[Dict[str, Any]]:
         self._check_client()
