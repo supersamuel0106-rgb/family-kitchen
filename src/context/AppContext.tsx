@@ -85,11 +85,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const submitPost = async (photoUrl: string, caption: string) => {
-    if (!currentRole || !currentSession) return;
-    await kitchenService.createUsagePost(currentSession.id, currentRole.id, photoUrl, caption, lastDuration);
+    if (!currentRole) throw new Error('尚未選擇角色，請先返回選擇角色');
+
+    // NOTE: 如果使用者跳過「開始使用」直接拍照，自動建立 session 以確保功能正常
+    let sessionToUse = currentSession;
+    if (!sessionToUse) {
+      const newSession = await kitchenService.startUsageSession(currentRole.id);
+      sessionToUse = newSession;
+      setCurrentSession(newSession);
+    }
+
+    await kitchenService.createUsagePost(sessionToUse.id, currentRole.id, photoUrl, caption, lastDuration);
     await refreshData();
     setTempPhoto(null);
-    setCurrentSession(null); // Clear session after successful post
+    setCurrentSession(null); // 發佈成功後清除 session
   };
 
   const addReservation = async (date: string, slot: 'morning' | 'afternoon') => {
