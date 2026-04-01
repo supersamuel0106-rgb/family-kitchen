@@ -40,6 +40,18 @@ def create_app():
                 files = os.listdir(root_path)
             except: pass
             
+            # 資料庫測試
+            db_status = "N/A"
+            db_error = None
+            try:
+                from app.repository.supabase_repo import repo
+                # 嘗試讀取 roles 表，這不應該回傳過多資料
+                test_res = repo.client.table("roles").select("id").limit(1).execute()
+                db_status = "CONNECTED"
+            except Exception as e:
+                db_status = "FAILED"
+                db_error = str(e)
+
             return {
                 "status": "online",
                 "python_version": sys.version,
@@ -48,7 +60,9 @@ def create_app():
                 "backend_path": backend_path,
                 "root_files": files,
                 "env_supabase_url": "SET" if os.getenv("SUPABASE_URL") else "MISSING",
-                "env_supabase_key": "SET" if os.getenv("SUPABASE_KEY") else "MISSING"
+                "env_supabase_key": "SET" if os.getenv("SUPABASE_KEY") else "MISSING",
+                "db_test_status": db_status,
+                "db_test_error": db_error
             }
 
         # 主路由

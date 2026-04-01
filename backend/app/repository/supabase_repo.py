@@ -35,9 +35,13 @@ class SupabaseRepository:
 
     def get_reservations(self) -> List[Dict[str, Any]]:
         self._check_client()
-        # Fetching all reservations. In a real app we might filter by date.
-        response = self.client.table("reservations").select("*").order("created_at", desc=True).execute()
-        return response.data
+        try:
+            # Fetching all reservations. In a real app we might filter by date.
+            response = self.client.table("reservations").select("*").order("created_at", desc=True).execute()
+            return response.data
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=f"讀取預約資料失敗: {str(e)}")
 
     def create_reservation(self, role_id: str, date: str, slot: str) -> Dict[str, Any]:
         self._check_client()
@@ -104,7 +108,11 @@ class SupabaseRepository:
 
     def get_posts(self) -> List[Dict[str, Any]]:
         self._check_client()
-        response = self.client.table("usage_posts").select("*").order("published_at", desc=True).execute()
-        return response.data
+        try:
+            response = self.client.table("usage_posts").select("*").order("published_at", desc=True).execute()
+            return response.data
+        except Exception as e:
+            from fastapi import HTTPException
+            raise HTTPException(status_code=500, detail=f"讀取動態貼文失敗: {str(e)}")
 
 repo = SupabaseRepository()
