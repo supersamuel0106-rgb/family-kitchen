@@ -46,23 +46,32 @@ def create_app():
             db_init_err = None
             storage_status = "N/A"
             storage_error = None
+            project_url_masked = None
+            buckets_seen = []
             
             try:
                 from app.repository.supabase_repo import repo
                 db_init_err = repo._init_error
+                project_url_masked = repo.get_masked_url()
                 
                 if repo.client:
                     # 1. 資料庫連線測試
                     test_res = repo.client.table("roles").select("id").limit(1).execute()
                     db_status = "CONNECTED"
                     
-                    # 2. Storage 存儲桶測試
+                    # 2. Storage 深度測試
                     try:
-                        # 嘗試列出 bucket 中的檔案（即使用戶沒有檔案也應該能成功呼叫）
-                        storage_res = repo.client.storage.get_bucket("kitchen_photos")
-                        storage_status = "FOUND"
+                        # 測試權限：能看到哪些 Buckets？
+                        buckets = repo.client.storage.list_buckets()
+                        buckets_seen = [b.name for b in buckets]
+                        
+                        # 具體檢查目標 Bucket
+                        if "kitchen_photos" in buckets_seen:
+                            storage_status = "FOUND"
+                        else:
+                            storage_status = "NOT_SEEN_IN_LIST"
                     except Exception as se:
-                        storage_status = "NOT_FOUND_OR_ERROR"
+                        storage_status = "LIST_BUCKETS_FAILED"
                         storage_error = str(se)
                 else:
                     db_status = "INIT_FAILED"
@@ -79,11 +88,13 @@ def create_app():
                 "root_files": files,
                 "env_supabase_url": "SET" if os.getenv("SUPABASE_URL") else "MISSING",
                 "env_supabase_key": "SET" if os.getenv("SUPABASE_KEY") else "MISSING",
+                "project_url_masked": project_url_masked,
                 "db_test_status": db_status,
                 "db_test_error": db_error,
                 "db_init_error": db_init_err,
                 "storage_test_status": storage_status,
-                "storage_test_error": storage_error
+                "storage_test_error": storage_error,
+                "buckets_seen": buckets_seen
             }
 
         # 主路由

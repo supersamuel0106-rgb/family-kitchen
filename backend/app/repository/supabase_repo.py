@@ -20,6 +20,13 @@ class SupabaseRepository:
                 self._init_error = f"Supabase 初始化失敗: {str(e)}"
                 self.client = None
 
+    def get_masked_url(self) -> str:
+        url = os.getenv("SUPABASE_URL") or ""
+        if len(url) > 15:
+            # 遮罩中間部分：如 https://abc...xyz.supabase.co
+            return f"{url[:15]}...{url[-13:]}"
+        return url
+
     def _check_client(self):
         if not self.client:
             from fastapi import HTTPException
