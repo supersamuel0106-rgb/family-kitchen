@@ -28,8 +28,13 @@ export const TimerPage: React.FC = () => {
   const time = formatTime(seconds);
 
   const handleEnd = async () => {
-    await endSession(seconds);
-    setCurrentPage('photo_capture');
+    try {
+      await endSession(seconds);
+      setCurrentPage('photo_capture');
+    } catch (err: any) {
+      console.error(err);
+      alert(`結束計時失敗: ${err.message || '請確認 usage_sessions 資料表是否有 UPDATE 權限'}`);
+    }
   };
 
   return (
