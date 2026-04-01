@@ -46,14 +46,17 @@ export const UsageStatusPage: React.FC = () => {
                 重新整理
               </button>
             </div>
-          ) : posts.length === 0 ? (
+          ) : (!Array.isArray(posts) || posts.length === 0) ? (
             <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant/40 gap-4">
               <MessageSquareOff size={48} strokeWidth={1.5} />
               <p className="font-bold">目前尚無廚房使用紀錄</p>
             </div>
           ) : (
             posts.map((post) => {
-              const role = roles.find(r => r.id === post.roleId);
+              if (!post || !post.id) return null;
+              const role = roles?.find(r => r.id === post.roleId);
+              const roleColor = role?.color || '#7c4dff'; // Fallback color
+              
               return (
                 <article key={post.id} className="bg-surface-container-lowest rounded-2xl overflow-hidden border border-outline-variant/30 shadow-sm">
                 <div className="p-5 space-y-4">
@@ -61,29 +64,35 @@ export const UsageStatusPage: React.FC = () => {
                     <div className="flex items-center gap-3">
                       <div 
                         className="w-10 h-10 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: `${role?.color}15` }}
+                        style={{ backgroundColor: `${roleColor}15` }}
                       >
-                        <User size={20} style={{ color: role?.color }} />
+                        <User size={20} style={{ color: roleColor }} />
                       </div>
                       <div>
-                        <p className="font-bold text-base leading-tight">{role?.roleName} 剛剛結束使用</p>
+                        <p className="font-bold text-base leading-tight">{role?.roleName || '未知成員'} 剛剛結束使用</p>
                         <p className="text-on-surface-variant text-xs flex items-center gap-1 mt-0.5">
                           <Clock size={14} />
-                          時長：{Math.floor(post.durationSeconds / 60)} 分鐘
+                          時長：{Math.floor((post.durationSeconds || 0) / 60)} 分鐘
                         </p>
                       </div>
                     </div>
                     <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-high px-2 py-1 rounded-md">
-                      {formatTime(post.publishedAt)}
+                      {formatTime(post.publishedAt || new Date().toISOString())}
                     </span>
                   </div>
 
                   <div className="aspect-[16/9] w-full rounded-xl overflow-hidden bg-surface-container">
-                    <img src={post.photoUrl} alt="Kitchen usage" className="w-full h-full object-cover" />
+                    {post.photoUrl ? (
+                      <img src={post.photoUrl} alt="Kitchen usage" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-on-surface-variant/20 italic text-xs">
+                        無照片
+                      </div>
+                    )}
                   </div>
 
                   <div>
-                    <p className="text-primary italic text-sm font-medium">「{post.caption}」</p>
+                    <p className="text-primary italic text-sm font-medium">「{post.caption || '忙碌的一天！'}」</p>
                   </div>
                 </div>
               </article>

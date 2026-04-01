@@ -46,6 +46,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         kitchenService.getUsagePosts(),
         kitchenService.getFamilyRoles()
       ]);
+
+      // 檢查回應是否為陣列，防止後端回傳錯誤物件導致前端 map 崩潰
+      if (!Array.isArray(resData) || !Array.isArray(postData) || !Array.isArray(roleData)) {
+         throw new Error('伺服器回傳格式錯誤 (非陣列)');
+      }
+
       setReservations(resData);
       setPosts(postData);
       setRoles(roleData);

@@ -12,7 +12,8 @@ const toCamelCase = (obj: any): any => {
     return obj.map(v => toCamelCase(v));
   } else if (obj !== null && typeof obj === 'object') {
     return Object.keys(obj).reduce((result, key) => {
-      const camelKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+      // 標準化回調參數 (match, p1) 以避免某些瀏覽器 (如 iOS Safari) 的不穩定性
+      const camelKey = key.replace(/_([a-z])/g, (_, p1) => p1.toUpperCase());
       result[camelKey] = toCamelCase(obj[key]);
       return result;
     }, {} as any);
@@ -20,17 +21,25 @@ const toCamelCase = (obj: any): any => {
   return obj;
 };
 
+async function safeJson(res: Response) {
+  try {
+    return await res.json();
+  } catch (err) {
+    throw new Error('無法解讀伺服器回應 (非 JSON 格式)');
+  }
+}
+
 export const kitchenService = {
   getFamilyRoles: async (): Promise<FamilyRole[]> => {
     const res = await fetch('/api/roles');
-    if (!res.ok) throw new Error('Failed to fetch roles');
-    return toCamelCase(await res.json());
+    if (!res.ok) throw new Error('無法讀取角色清單');
+    return toCamelCase(await safeJson(res));
   },
 
   getReservations: async (): Promise<Reservation[]> => {
     const res = await fetch('/api/reservations');
-    if (!res.ok) throw new Error('Failed to fetch reservations');
-    return toCamelCase(await res.json());
+    if (!res.ok) throw new Error('無法讀取預約資料');
+    return toCamelCase(await safeJson(res));
   },
 
   createReservation: async (roleId: FamilyRoleId, date: string, slot: TimeSlot): Promise<Reservation> => {
@@ -40,10 +49,10 @@ export const kitchenService = {
       body: JSON.stringify({ role_id: roleId, reservation_date: date, time_slot: slot })
     });
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.detail || 'Failed to create reservation');
+      const errorData = await safeJson(res).catch(() => ({}));
+      throw new Error(errorData.detail || '預約失敗');
     }
-    return toCamelCase(await res.json());
+    return toCamelCase(await safeJson(res));
   },
 
   startUsageSession: async (roleId: FamilyRoleId): Promise<UsageSession> => {
@@ -52,8 +61,8 @@ export const kitchenService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role_id: roleId })
     });
-    if (!res.ok) throw new Error('Failed to start session');
-    return toCamelCase(await res.json());
+    if (!res.ok) throw new Error('開始計時失敗');
+    return toCamelCase(await safeJson(res));
   },
 
   endUsageSession: async (sessionId: string, durationSeconds: number): Promise<UsageSession> => {
@@ -62,8 +71,8 @@ export const kitchenService = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ duration_seconds: durationSeconds })
     });
-    if (!res.ok) throw new Error('Failed to end session');
-    return toCamelCase(await res.json());
+    if (!res.ok) throw new Error('結束計時失敗');
+    return toCamelCase(await safeJson(res));
   },
 
   createUsagePost: async (sessionId: string, roleId: FamilyRoleId, photoDataUrl: string, caption: string, durationSeconds: number): Promise<UsagePost> => {
@@ -83,15 +92,15 @@ export const kitchenService = {
     });
     
     if (!res.ok) {
-      const errorData = await res.json().catch(() => ({}));
-      throw new Error(errorData.detail || 'Failed to create post');
+      const errorData = await safeJson(res).catch(() => ({}));
+      throw new Error(errorData.detail || '發佈貼文失敗');
     }
-    return toCamelCase(await res.json());
+    return toCamelCase(await safeJson(res));
   },
 
   getUsagePosts: async (): Promise<UsagePost[]> => {
     const res = await fetch('/api/posts');
-    if (!res.ok) throw new Error('Failed to fetch posts');
-    return toCamelCase(await res.json());
+    if (!res.ok) throw new Error('無法讀取動態紀錄');
+    return toCamelCase(await safeJson(res));
   }
 };
