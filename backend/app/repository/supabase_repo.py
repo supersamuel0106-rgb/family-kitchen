@@ -37,7 +37,6 @@ class SupabaseRepository:
     def get_reservations(self) -> List[Dict[str, Any]]:
         self._check_client()
         try:
-            # Fetching all reservations. In a real app we might filter by date.
             response = self.client.table("reservations").select("*").order("created_at", desc=True).execute()
             return response.data
         except Exception as e:

@@ -88,7 +88,6 @@ def create_app():
         error_trace = traceback.format_exc()
         
         # 這裡不能依賴 FastAPI 成功加載，但 Vercel 需要一個 ASGI app
-        # 嘗試定義一個簡單的 ASGI app
         async def fallback_app(scope, receive, send):
             if scope['type'] == 'http':
                 content = f'{{"detail": "後端關鍵模組加載失敗", "error": "{error_msg}", "traceback": ""}}'.encode('utf-8')
