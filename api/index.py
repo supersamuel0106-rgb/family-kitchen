@@ -61,18 +61,21 @@ def create_app():
                     
                     # 2. Storage 深度測試
                     try:
-                        # 測試權限：能看到哪些 Buckets？
-                        buckets = repo.client.storage.list_buckets()
-                        buckets_seen = [b.name for b in buckets]
-                        
-                        # 具體檢查目標 Bucket
-                        if "kitchen_photos" in buckets_seen:
-                            storage_status = "FOUND"
-                        else:
-                            storage_status = "NOT_SEEN_IN_LIST"
+                        # 直接嘗試列出 kitchen_photos 內的檔案
+                        # 這是 anon 最常用的權限測試
+                        files_res = repo.client.storage.from_("kitchen_photos").list(path="", options={"limit": 1})
+                        storage_status = "FOUND_AND_ACCESSIBLE"
+                        buckets_seen = ["kitchen_photos (Accessible)"]
                     except Exception as se:
-                        storage_status = "LIST_BUCKETS_FAILED"
+                        storage_status = "NOT_ACCESSIBLE_OR_NOT_FOUND"
                         storage_error = str(se)
+                        
+                        # 備案：嘗試列出所有 buckets (可能被 RLS 擋住)
+                        try:
+                            buckets = repo.client.storage.list_buckets()
+                            buckets_seen = [b.name for b in buckets]
+                        except:
+                            buckets_seen = ["FAILED_TO_LIST_ANY"]
                 else:
                     db_status = "INIT_FAILED"
             except Exception as e:
